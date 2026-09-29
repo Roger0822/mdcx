@@ -23,8 +23,11 @@ jobs:
         with:
           activate-environment: true
 
+      - name: Install FFmpeg build dependencies
+        run: brew install ffmpeg pkg-config
+
       - name: Install dependencies
-        run: uv sync --locked --all-extras --dev
+        run: uv sync --locked --dev
 
       - name: Test JavDB actor parser
         run: uv run pytest tests/crawlers/test_parsers.py -k 'javdb_current_actor_markup or javdb_legacy_actor_markup'
