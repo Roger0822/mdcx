@@ -12,12 +12,14 @@ permissions:
 jobs:
   build-macos:
     runs-on: macos-latest
+    env:
+      UV_PYTHON: "3.13"
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version-file: pyproject.toml
+          python-version: "3.13"
 
       - uses: astral-sh/setup-uv@v6
         with:
