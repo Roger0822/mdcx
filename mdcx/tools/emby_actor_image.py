@@ -21,6 +21,12 @@ from ..signals import signal
 from ..utils import get_used_time
 
 
+def _server_headers() -> dict[str, str]:
+    if manager.config.server_type == "jellyfin":
+        return {"Authorization": f'MediaBrowser Token="{manager.config.api_key}"'}
+    return {}
+
+
 async def update_emby_actor_photo() -> None:
     signal.change_buttons_status.emit()
     server_type = manager.config.server_type
@@ -45,18 +51,20 @@ async def _get_emby_actor_list() -> list[dict]:
         # http://192.168.5.191:8096/emby/Persons/梦乃爱华?api_key=ee9a2f2419704257b1dd60b975f2d64e
     else:
         server_name = "Jellyfin"
-        url += "/Persons?api_key=" + manager.config.api_key
+        url += "/Persons"
 
     if manager.config.user_id:
-        url += f"&userid={manager.config.user_id}"
+        separator = "&" if "?" in url else "?"
+        url += f"{separator}userId={manager.config.user_id}"
 
     signal.show_log_text(f"⏳ 连接 {server_name} 服务器...")
 
     if not manager.config.api_key:
         signal.show_log_text(f"🔴 {server_name} API 密钥未填写！")
         signal.show_log_text("================================================================================")
+        return []
 
-    response, error = await manager.computed.async_client.get_json(url, use_proxy=False)
+    response, error = await manager.computed.async_client.get_json(url, headers=_server_headers(), use_proxy=False)
     if response is None:
         signal.show_log_text(f"🔴 {server_name} 连接失败！请检查 {server_name} 地址 和 API 密钥是否正确填写！ {error}")
         signal.show_log_text(traceback.format_exc())
@@ -74,8 +82,12 @@ async def _upload_actor_photo(url: str, pic_path: Path) -> tuple[bool, str]:
         async with aiofiles.open(pic_path, "rb") as f:
             content = await f.read()
             b6_pic = base64.b64encode(content)  # 读取文件内容, 转换为base64编码
-        header = {"Content-Type": "image/jpeg" if pic_path.suffix in (".jpg", ".jpeg") else "image/png"}
-        r, err = await manager.computed.async_client.post_content(url=url, data=b6_pic, headers=header)
+        header = _server_headers() | {
+            "Content-Type": "image/jpeg" if pic_path.suffix in (".jpg", ".jpeg") else "image/png"
+        }
+        r, err = await manager.computed.async_client.post_content(
+            url=url, data=b6_pic, headers=header, use_proxy=False
+        )
         return r is not None, err
     except Exception as e:
         signal.show_log_text(traceback.format_exc())
@@ -99,11 +111,11 @@ def _generate_server_url(actor_js: dict) -> tuple[str, str, str, str, str, str]:
         update_url = f"{emby_url}/emby/Items/{actor_id}?api_key={api_key}"
     else:
         actor_homepage = f"{emby_url}/web/index.html#!/details?id={actor_id}&serverId={server_id}"
-        actor_person = f"{emby_url}/Persons/{actor_name}?api_key={api_key}"
-        pic_url = f"{emby_url}/Items/{actor_id}/Images/Primary?api_key={api_key}"
-        backdrop_url = f"{emby_url}/Items/{actor_id}/Images/Backdrop?api_key={api_key}"
-        backdrop_url_0 = f"{emby_url}/Items/{actor_id}/Images/Backdrop/0?api_key={api_key}"
-        update_url = f"{emby_url}/Items/{actor_id}?api_key={api_key}"
+        actor_person = f"{emby_url}/Persons/{actor_name}"
+        pic_url = f"{emby_url}/Items/{actor_id}/Images/Primary"
+        backdrop_url = f"{emby_url}/Items/{actor_id}/Images/Backdrop"
+        backdrop_url_0 = f"{emby_url}/Items/{actor_id}/Images/Backdrop/0"
+        update_url = f"{emby_url}/Items/{actor_id}"
         # http://192.168.5.191:8097/Items/f840883833eaaebd915822f5f39e945b/Images/Primary?api_key=9e0fce1acde54158b0d4294731ff7a46
         # http://192.168.5.191:8097/Items/f840883833eaaebd915822f5f39e945b/Images/Backdrop?api_key=9e0fce1acde54158b0d4294731ff7a46
     return actor_homepage, actor_person, pic_url, backdrop_url, backdrop_url_0, update_url
@@ -370,7 +382,9 @@ async def _update_emby_actor_photo_execute(actor_list: list[dict], gfriends_acto
         # 清理旧图片（backdrop可以多张，不清理会一直累积）
         if actor_backdrop_imagetages:
             for _ in range(len(actor_backdrop_imagetages)):
-                await manager.computed.async_client.request("DELETE", backdrop_url_0)
+                await manager.computed.async_client.request(
+                    "DELETE", backdrop_url_0, headers=_server_headers(), use_proxy=False
+                )
 
         # 上传头像到 emby
         r, err = await _upload_actor_photo(pic_url, pic_path)
