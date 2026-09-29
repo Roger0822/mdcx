@@ -1,0 +1,39 @@
+name: Build macOS app with JavDB actor fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/javdb-actors
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+
+      - name: Install dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Test JavDB actor parser
+        run: uv run pytest tests/crawlers/test_parsers.py -k 'javdb_current_actor_markup or javdb_legacy_actor_markup'
+
+      - name: Build Apple Silicon DMG
+        run: uv run scripts/build.py --create-dmg --version 220250909.1 --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MDCx-macOS-arm64-${{ github.sha }}
+          path: dist/MDCx.dmg
+          if-no-files-found: error
