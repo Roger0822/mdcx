@@ -22,15 +22,29 @@ class Parser(DetailPageParser):
         return extract_text(html, 'string(//h2[@class="title is-4"]/span[@class="origin-title"])')
 
     async def actors(self, ctx, html: Selector) -> list[str]:
-        # parsel css 不支持 :has() 中的多个选择器, 这是一个已知问题: https://github.com/scrapy/cssselect/issues/138
-        return (
-            html.css("span:has(strong.female)")
-            .xpath("//strong[contains(@class, 'female')]/preceding-sibling::a/text()")
-            .getall()
-        )
+        # JavDB now marks the actor link itself, rather than a following strong element.
+        actors = html.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' panel-block ')]"
+            "[strong[contains(., '演員') or contains(., '演员') or contains(., 'Actor')]]"
+            "//a[contains(concat(' ', normalize-space(@class), ' '), ' actor-female ')]/text()"
+        ).getall()
+        if actors:
+            return actors
+        return html.xpath(
+            "//strong[contains(concat(' ', normalize-space(@class), ' '), ' female ')]/preceding-sibling::a/text()"
+        ).getall()
 
     async def all_actors(self, ctx, html: Selector) -> list[str]:
-        return (html.css("span:has(strong.female)") or html.css("span:has(strong.male)")).xpath("a/text()").getall()
+        actors = html.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' panel-block ')]"
+            "[strong[contains(., '演員') or contains(., '演员') or contains(., 'Actor')]]"
+            "//a[starts-with(@href, '/actors/')]/text()"
+        ).getall()
+        if actors:
+            return actors
+        return html.xpath(
+            "//strong[contains(@class, 'female') or contains(@class, 'male')]/preceding-sibling::a/text()"
+        ).getall()
 
     async def studio(self, ctx, html: Selector) -> str:
         return extract_text(
