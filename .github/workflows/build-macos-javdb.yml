@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - fix/javdb-actors
+      - fix/jellyfin-auth
 
 permissions:
   contents: read
@@ -31,11 +32,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --dev
 
-      - name: Test JavDB actor parser
-        run: uv run pytest tests/crawlers/test_parsers.py -k 'javdb_current_actor_markup or javdb_legacy_actor_markup'
+      - name: Test actor scraping and Jellyfin authentication
+        run: |
+          uv run pytest tests/crawlers/test_parsers.py -k 'javdb_current_actor_markup or javdb_legacy_actor_markup'
+          uv run pytest tests/test_jellyfin_auth.py
 
       - name: Build Apple Silicon DMG
-        run: uv run scripts/build.py --create-dmg --version 220250909.1 --debug
+        run: uv run scripts/build.py --create-dmg --version 220250909.2 --debug
 
       - uses: actions/upload-artifact@v4
         with:
