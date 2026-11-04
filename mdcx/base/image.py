@@ -100,6 +100,8 @@ async def _add_to_pic(pic_path: Path, img_pic: Image.Image, mark_size: int, coun
         mark_pic_path = resources.icon_umr_path
     elif mark_name == "流出":
         mark_pic_path = resources.icon_leak_path
+    elif mark_name == "LTX":
+        mark_pic_path = resources.icon_ltx_path
     elif mark_name == "无码":
         mark_pic_path = resources.icon_wuma_path
 
