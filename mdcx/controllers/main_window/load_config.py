@@ -693,6 +693,8 @@ def load_config(self: "MyMAinWindow"):
         self.Ui.lineEdit_umr_style.setText(manager.config.umr_style)
         # 版本命名规则-无码流出版
         self.Ui.lineEdit_leak_style.setText(manager.config.leak_style)
+        # 版本命名规则-LTX
+        self.Ui.lineEdit_ltx_style.setText(manager.config.ltx_style)
         # 版本命名规则-无码版
         self.Ui.lineEdit_wuma_style.setText(manager.config.wuma_style)
         # 版本命名规则-有码版
@@ -875,6 +877,7 @@ def load_config(self: "MyMAinWindow"):
             (self.Ui.checkBox_umr, MarkType.UMR),
             (self.Ui.checkBox_leak, MarkType.LEAK),
             (self.Ui.checkBox_uncensored, MarkType.UNCENSORED),
+            (self.Ui.checkBox_ltx, MarkType.LTX),
             (self.Ui.checkBox_hd, MarkType.HD),
         )
         # 水印位置是否固定
