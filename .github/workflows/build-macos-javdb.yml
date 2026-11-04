@@ -7,6 +7,7 @@ on:
       - fix/javdb-actors
       - fix/jellyfin-auth
       - fix/ltx-watermark
+      - codex/ltx-mosaic-priority
 
 permissions:
   contents: read
@@ -40,7 +41,7 @@ jobs:
           uv run pytest tests/test_ltx.py
 
       - name: Build Apple Silicon DMG
-        run: uv run scripts/build.py --create-dmg --version 220261104.1 --debug
+        run: uv run scripts/build.py --create-dmg --version 220261104.2 --debug
 
       - uses: actions/upload-artifact@v4
         with:
