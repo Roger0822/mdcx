@@ -462,6 +462,7 @@ def save_config(self: "MyMAinWindow"):
 
     manager.config.umr_style = self.Ui.lineEdit_umr_style.text()  # 无码破解版本命名
     manager.config.leak_style = self.Ui.lineEdit_leak_style.text()  # 无码流出版本命名
+    manager.config.ltx_style = self.Ui.lineEdit_ltx_style.text()  # LTX 版本命名
     manager.config.wuma_style = self.Ui.lineEdit_wuma_style.text()  # 无码版本命名
     manager.config.youma_style = self.Ui.lineEdit_youma_style.text()  # 有码版本命名
 
@@ -575,6 +576,7 @@ def save_config(self: "MyMAinWindow"):
         (self.Ui.checkBox_umr, MarkType.UMR),
         (self.Ui.checkBox_leak, MarkType.LEAK),
         (self.Ui.checkBox_uncensored, MarkType.UNCENSORED),
+        (self.Ui.checkBox_ltx, MarkType.LTX),
         (self.Ui.checkBox_hd, MarkType.HD),
     )
 

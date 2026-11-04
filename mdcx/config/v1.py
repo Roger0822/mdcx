@@ -223,6 +223,7 @@ class ConfigV1:
     actor_name_more: str = r"等演员"
     umr_style: str = r"-破解"
     leak_style: str = r"-流出"
+    ltx_style: str = r"-LTX"
     wuma_style: str = r""
     youma_style: str = r""
     show_moword: str = r"file,"
@@ -261,7 +262,7 @@ class ConfigV1:
     thumb_mark: int = 1
     fanart_mark: int = 0
     mark_size: int = 5
-    mark_type: str = r"sub,umr,leak,uncensored,hd"
+    mark_type: str = r"sub,umr,leak,uncensored,ltx,hd"
     mark_fixed: str = r"not_fixed"  # fixed, not_fixed, corner
     mark_pos: str = r"top_left"
     mark_pos_corner: str = r"top_left"

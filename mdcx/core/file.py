@@ -405,6 +405,7 @@ async def get_file_info_v2(file_path: Path, copy_sub: bool = True) -> FileInfo:
     cd_part = ""
     destroyed = ""
     leak = ""
+    ltx = ""
     wuma = ""
     youma = ""
     mosaic = ""
@@ -531,9 +532,15 @@ async def get_file_info_v2(file_path: Path, copy_sub: bool = True) -> FileInfo:
             else:
                 cd_part = "-" + str(cd_part)
 
+        # 判断是否是 LTX 版本
+        ltx_style = str(manager.config.ltx_style)
+        if "ltx" in file_path_str.lower() or (ltx_style and ltx_style.lower() in file_path_str.lower()):
+            ltx = ltx_style
+            mosaic = "LTX"
+
         # 判断是否是马赛克破坏版
         umr_style = str(manager.config.umr_style)
-        if (
+        if not mosaic and (
             "-uncensored." in file_path_str.lower()
             or "umr." in file_path_str.lower()
             or "破解" in file_path_str
@@ -652,6 +659,9 @@ async def get_file_info_v2(file_path: Path, copy_sub: bool = True) -> FileInfo:
                     if ">无码流出</" in nfo_content or ">無碼流出</" in nfo_content:
                         leak = leak_style
                         mosaic = "无码流出"
+                    elif ">LTX</" in nfo_content:
+                        ltx = ltx_style
+                        mosaic = "LTX"
                     elif ">无码破解</" in nfo_content or ">無碼破解</" in nfo_content:
                         destroyed = umr_style
                         mosaic = "无码破解"
@@ -710,7 +720,7 @@ async def get_file_info_v2(file_path: Path, copy_sub: bool = True) -> FileInfo:
         suffix_sort_list = manager.config.suffix_sort
         for each in suffix_sort_list:
             if each == "moword":
-                file_show_name += destroyed + leak + wuma + youma
+                file_show_name += destroyed + leak + ltx + wuma + youma
             elif each == "cnword":
                 file_show_name += c_word
         file_show_name += cd_part
@@ -730,6 +740,7 @@ async def get_file_info_v2(file_path: Path, copy_sub: bool = True) -> FileInfo:
         cd_part=cd_part,
         destroyed=destroyed,
         leak=leak,
+        ltx=ltx,
         wuma=wuma,
         youma=youma,
         mosaic=mosaic,

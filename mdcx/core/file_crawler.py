@@ -313,6 +313,7 @@ class FileScraper:
         file_path = task_input.file_path
         file_path_str = str(file_path).lower() if file_path else ""
         leak = task_input.leak
+        ltx = task_input.ltx
         mosaic = task_input.mosaic
         short_number = task_input.short_number
         wuma = task_input.wuma
@@ -398,6 +399,8 @@ class FileScraper:
         # 马赛克
         if leak:
             res.mosaic = "无码流出"
+        elif ltx:
+            res.mosaic = "LTX"
         elif destroyed:
             res.mosaic = "无码破解"
         elif wuma:
