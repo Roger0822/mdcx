@@ -29,6 +29,7 @@ class FileInfo:
     folder_path: Path
     has_sub: bool
     leak: str
+    ltx: str
     letters: str
     short_number: str
     sub_list: list[str]
@@ -75,6 +76,7 @@ class FileInfo:
             has_sub=self.has_sub,
             c_word=self.c_word,
             leak=self.leak,
+            ltx=self.ltx,
             wuma=self.wuma,
             youma=self.youma,
             cd_part=self.cd_part,
@@ -105,6 +107,7 @@ class FileInfo:
             folder_path=Path(),
             has_sub=False,
             leak="",
+            ltx="",
             letters="",
             short_number="",
             sub_list=[],
@@ -145,6 +148,7 @@ class CrawlTask(CrawlerInput):
     destroyed: str
     has_sub: bool
     leak: str
+    ltx: str
     website_name: str  # 用于重新刮削时指定网站
     wuma: str
     youma: str
