@@ -44,9 +44,8 @@ def load_config(self: "MyMAinWindow"):
     """
     读取配置文件并绑定到 UI 组件
     """
-    # Extend the generated desktop form without regenerating unrelated controls.
-    if not hasattr(self.Ui, "lineEdit_ltx_style"):
-        ui = self.Ui
+    ui = self.Ui
+    if not hasattr(ui, "lineEdit_ltx_style"):
         ui.groupBox_46.resize(ui.groupBox_46.width(), 541)
         ui.label_ltx = QLabel("LTX：", ui.groupBox_46)
         ui.label_ltx.setGeometry(21, 445, 130, 30)
@@ -63,8 +62,16 @@ def load_config(self: "MyMAinWindow"):
         ui.label_ltx_help.setStyleSheet("color: rgb(8, 128, 128);")
         ui.checkBox_ltx = QCheckBox("LTX", ui.checkBox_hd.parentWidget())
         ui.checkBox_ltx.setObjectName("checkBox_ltx")
-        ui.checkBox_ltx.setToolTip("LTX 水印；自定义图片：userdata/watermark/ltx.png")
-        ui.horizontalLayout_14.insertWidget(ui.horizontalLayout_14.indexOf(ui.checkBox_hd), ui.checkBox_ltx)
+        ui.checkBox_ltx.setToolTip("马赛克水印；自定义图片：userdata/watermark/ltx.png")
+    ui.horizontalLayout_14.removeWidget(ui.checkBox_ltx)
+    ui.horizontalLayout_14.insertWidget(ui.horizontalLayout_14.indexOf(ui.checkBox_umr), ui.checkBox_ltx)
+    ui.label_138.setText(
+        "<p>水印分为字幕水印、马赛克水印、4K/8K水印。<br>"
+        "马赛克水印有5个：有码、破解、LTX、流出、无码。<br>"
+        "马赛克水印优先级：有码 &gt; LTX &gt; 破解 &gt; 流出 &gt; 无码。<br>"
+        "LTX 版本优先显示 LTX 水印；未勾选时，依次使用已勾选的破解、流出、无码水印。<br>"
+        "每张图片只显示一种马赛克状态，位置使用马赛克水印位置设置。</p>"
+    )
     field_mapping = {
         "title": CrawlerResultFields.TITLE,
         "originaltitle": CrawlerResultFields.ORIGINALTITLE,
