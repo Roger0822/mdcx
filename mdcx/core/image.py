@@ -50,8 +50,17 @@ async def add_mark(json_data: OtherInfo, file_info: FileInfo, mosaic: str):
             mark_list.append("流出")
         elif MarkType.UNCENSORED in mark_type:
             mark_list.append("无码")
-    elif mosaic == "LTX" and MarkType.LTX in mark_type:
-        mark_list.append("LTX")
+    elif mosaic == "LTX":
+        # LTX belongs to the mosaic category and falls back to lower-priority marks.
+        for kind, name in (
+            (MarkType.LTX, "LTX"),
+            (MarkType.UMR, "破解"),
+            (MarkType.LEAK, "流出"),
+            (MarkType.UNCENSORED, "无码"),
+        ):
+            if kind in mark_type:
+                mark_list.append(name)
+                break
     elif (mosaic == "无码" or mosaic == "無碼") and MarkType.UNCENSORED in mark_type:
         mark_list.append("无码")
 
