@@ -260,9 +260,10 @@ def render_name_template(
     # 获取文件信息
     destroyed = file_info.destroyed
     leak = file_info.leak
+    ltx = file_info.ltx
     wuma = file_info.wuma
     youma = file_info.youma
-    m_word = destroyed + leak + wuma + youma
+    m_word = destroyed + leak + ltx + wuma + youma
     c_word = file_info.c_word
     definition = file_info.definition
 

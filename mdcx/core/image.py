@@ -50,6 +50,8 @@ async def add_mark(json_data: OtherInfo, file_info: FileInfo, mosaic: str):
             mark_list.append("流出")
         elif MarkType.UNCENSORED in mark_type:
             mark_list.append("无码")
+    elif mosaic == "LTX" and MarkType.LTX in mark_type:
+        mark_list.append("LTX")
     elif (mosaic == "无码" or mosaic == "無碼") and MarkType.UNCENSORED in mark_type:
         mark_list.append("无码")
 
