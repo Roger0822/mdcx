@@ -65,6 +65,7 @@ class Resources:
         self.mark_youma = self.r("Img/youma.png")
         self.mark_umr = self.r("Img/umr.png")
         self.mark_leak = self.r("Img/leak.png")
+        self.mark_ltx = self.r("Img/ltx.png")
         self.mark_wuma = self.r("Img/wuma.png")
         self.icon_4k_path = self.u("watermark/4k.png")
         self.icon_8k_path = self.u("watermark/8k.png")
@@ -72,6 +73,7 @@ class Resources:
         self.icon_youma_path = self.u("watermark/youma.png")
         self.icon_umr_path = self.u("watermark/umr.png")
         self.icon_leak_path = self.u("watermark/leak.png")
+        self.icon_ltx_path = self.u("watermark/ltx.png")
         self.icon_wuma_path = self.u("watermark/wuma.png")
 
         self.actor_mapping_data = None  # 演员映射表数据
@@ -207,6 +209,8 @@ class Resources:
             copy_file_sync(self.mark_umr, self.icon_umr_path)
         if not os.path.isfile(self.icon_leak_path):
             copy_file_sync(self.mark_leak, self.icon_leak_path)
+        if not os.path.isfile(self.icon_ltx_path):
+            copy_file_sync(self.mark_ltx, self.icon_ltx_path)
         if not os.path.isfile(self.icon_wuma_path):
             copy_file_sync(self.mark_wuma, self.icon_wuma_path)
 

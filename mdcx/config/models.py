@@ -516,6 +516,7 @@ class Config(BaseModel):
     actor_name_more: str = Field(default="等演员", title="更多演员名称")
     umr_style: str = Field(default="-破解", title="UMR样式")
     leak_style: str = Field(default="-流出", title="泄露样式")
+    ltx_style: str = Field(default="-LTX", title="LTX 样式")
     wuma_style: str = Field(default="", title="无码样式")
     youma_style: str = Field(default="", title="有码样式")
     cd_name: int = Field(default=0, title="CD名称")
@@ -585,6 +586,7 @@ class Config(BaseModel):
             MarkType.UMR,
             MarkType.LEAK,
             MarkType.UNCENSORED,
+            MarkType.LTX,
             MarkType.HD,
         ],
         title="水印类型",

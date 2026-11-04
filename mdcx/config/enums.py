@@ -417,11 +417,12 @@ class MarkType(Enum):
     UMR = "umr"
     LEAK = "leak"
     UNCENSORED = "uncensored"
+    LTX = "ltx"
     HD = "hd"
 
     @classmethod
     def names(cls):
-        return ["字幕", "有码", "破解", "流出", "无码", "高清"]
+        return ["字幕", "有码", "破解", "流出", "无码", "LTX", "高清"]
 
 
 class Switch(Enum):
