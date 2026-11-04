@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QCheckBox, QFileDialog, QLabel, QLineEdit
 
 from mdcx.config.enums import (
     CDChar,
@@ -44,6 +44,27 @@ def load_config(self: "MyMAinWindow"):
     """
     读取配置文件并绑定到 UI 组件
     """
+    # Extend the generated desktop form without regenerating unrelated controls.
+    if not hasattr(self.Ui, "lineEdit_ltx_style"):
+        ui = self.Ui
+        ui.groupBox_46.resize(ui.groupBox_46.width(), 541)
+        ui.label_ltx = QLabel("LTX：", ui.groupBox_46)
+        ui.label_ltx.setGeometry(21, 445, 130, 30)
+        ui.label_ltx.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        ui.lineEdit_ltx_style = QLineEdit(ui.groupBox_46)
+        ui.lineEdit_ltx_style.setGeometry(157, 445, 450, 30)
+        ui.lineEdit_ltx_style.setObjectName("lineEdit_ltx_style")
+        ui.lineEdit_ltx_style.setStyleSheet(ui.lineEdit_umr_style.styleSheet())
+        ui.label_ltx_help = QLabel(
+            "视频路径包含 LTX 时识别为 LTX 版本；重命名时在番号后添加此字符。", ui.groupBox_46
+        )
+        ui.label_ltx_help.setGeometry(157, 485, 523, 40)
+        ui.label_ltx_help.setWordWrap(True)
+        ui.label_ltx_help.setStyleSheet("color: rgb(8, 128, 128);")
+        ui.checkBox_ltx = QCheckBox("LTX", ui.checkBox_hd.parentWidget())
+        ui.checkBox_ltx.setObjectName("checkBox_ltx")
+        ui.checkBox_ltx.setToolTip("LTX 水印；自定义图片：userdata/watermark/ltx.png")
+        ui.horizontalLayout_14.insertWidget(ui.horizontalLayout_14.indexOf(ui.checkBox_hd), ui.checkBox_ltx)
     field_mapping = {
         "title": CrawlerResultFields.TITLE,
         "originaltitle": CrawlerResultFields.ORIGINALTITLE,
