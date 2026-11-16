@@ -10,6 +10,21 @@ from ..models.types import CrawlerResult
 from .base import BaseCrawler, CralwerException, CrawlerData, DetailPageParser, extract_all_texts, extract_text
 
 
+def _normalize_number(number: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", number.upper())
+
+
+def _check_access_page(html: Selector, stage: str) -> None:
+    text = html._text or ""
+    if "Due to copyright restrictions" in text:
+        raise CralwerException(f"{stage}: JavDB 限制当前出口地区访问")
+    if "The owner of this website has banned your access" in text:
+        raise CralwerException(f"{stage}: JavDB 暂时限制当前 IP 访问")
+    title = html.xpath("string(//title)").get(default="").lower()
+    if "just a moment" in title or "cf-chl-" in text or html.xpath('//*[@id="challenge-form"]'):
+        raise CralwerException(f"{stage}: 收到 Cloudflare 验证页面，尚未取得影片页面")
+
+
 class Parser(DetailPageParser):
     async def number(self, ctx, html: Selector) -> str:
         result = extract_text(html, '//a[@class="button is-white copy-to-clipboard"]/@data-clipboard-text')
@@ -171,47 +186,43 @@ class JavdbCrawler(BaseCrawler):
 
     @override
     async def _parse_search_page(self, ctx, html: Selector, search_url: str) -> list[str] | None:
-        html_text = html._text or ""
-        if "The owner of this website has banned your access based on your browser's behaving" in html_text:
-            raise CralwerException(f"由于请求过多，javdb网站暂时禁止了你当前IP的访问！！点击 {search_url} 查看详情！")
-        if "Due to copyright restrictions" in html_text:
-            raise CralwerException(
-                f"由于版权限制，javdb网站禁止了日本IP的访问！！请更换日本以外代理！点击 {search_url} 查看详情！"
-            )
-        if "ray-id" in html_text:
-            raise CralwerException("搜索结果: 被 Cloudflare 5 秒盾拦截！请尝试更换cookie！")
+        _check_access_page(html, "搜索页")
 
         # 获取搜索结果
-        res_list = html.xpath("//a[@class='box']")
+        res_list = html.xpath(
+            "//a[contains(concat(' ', normalize-space(@class), ' '), ' box ')]"
+        )
         if not res_list:
-            return None
+            raise CralwerException("JavDB 搜索页没有影片卡片：可能无结果、需要登录或页面结构已变化")
 
         info_list = []
         for each in res_list:
             href = extract_text(each, "@href")
-            title = extract_text(each, "div[@class='video-title']/strong/text()")
-            meta = extract_text(each, "div[@class='meta']/text()")
+            title = extract_text(
+                each,
+                "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' video-title ')]/strong)",
+            )
 
-            if href:
-                info_list.append([href, title, meta])
+            if re.fullmatch(r"/v/[a-zA-Z0-9]+", href):
+                info_list.append((href, title.strip()))
 
-        # 精确匹配
-        number = ctx.input.number
-        for href, title, meta in info_list:
-            if number.upper() in title.upper():
+        # Match only the dedicated code field, never a substring or release date.
+        number = _normalize_number(ctx.input.number)
+        for href, title in info_list:
+            if number and number == _normalize_number(title):
+                ctx.debug(f"JavDB 番号匹配成功: {title} -> {href}")
                 return [urljoin(self.base_url, href)]
-
-        # 模糊匹配
-        clean_number = number.upper().replace(".", "").replace("-", "").replace(" ", "")
-        for href, title, meta in info_list:
-            clean_content = (title + meta).upper().replace("-", "").replace(".", "").replace(" ", "")
-            if clean_number in clean_content:
-                return [urljoin(self.base_url, href)]
-
-        return None
+        candidates = ", ".join(title for _, title in info_list[:10]) or "无法读取番号"
+        raise CralwerException(f"JavDB 未找到完整匹配番号 {ctx.input.number}；搜索结果: {candidates}")
 
     @override
     async def _parse_detail_page(self, ctx, html: Selector, detail_url: str) -> CrawlerData | None:
+        _check_access_page(html, "详情页")
+        page_number = extract_text(html, '//a[@data-clipboard-text]/@data-clipboard-text')
+        if page_number and _normalize_number(page_number) != _normalize_number(ctx.input.number):
+            raise CralwerException(
+                f"JavDB 详情页番号不符：请求 {ctx.input.number}，实际 {page_number}"
+            )
         # 提取 javdbid
         javdbid = ""
         if r := re.search(r"/v/([a-zA-Z0-9]+)", detail_url):
