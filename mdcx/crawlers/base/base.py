@@ -117,6 +117,8 @@ class GenericBaseCrawler[T: Context = Context](ABC):
             html, error = await self._fetch_search(ctx, search_url)
             if html is None:
                 ctx.debug(f"搜索页请求失败: {error=}")
+                if len(search_urls) == 1:
+                    raise CralwerException(f"搜索页请求失败: {error}")
                 continue
             ctx.debug(f"搜索页请求成功: {search_url=}")
             selector = Selector(text=html)
@@ -130,6 +132,8 @@ class GenericBaseCrawler[T: Context = Context](ABC):
             html, error = await self._fetch_detail(ctx, detail_url)
             if html is None:
                 ctx.debug(f"详情页请求失败: {error=}")
+                if len(detail_urls) == 1:
+                    raise CralwerException(f"详情页请求失败: {error}")
                 continue
             ctx.debug(f"详情页请求成功: {detail_url=}")
             selector = Selector(text=html)
