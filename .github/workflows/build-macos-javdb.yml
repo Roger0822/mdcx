@@ -1,4 +1,4 @@
-name: Build macOS app with LTX watermark
+name: Build macOS app with JavDB search fix
 
 on:
   workflow_dispatch:
@@ -8,6 +8,7 @@ on:
       - fix/jellyfin-auth
       - fix/ltx-watermark
       - codex/ltx-mosaic-priority
+      - codex/javdb-search-diagnostics
 
 permissions:
   contents: read
@@ -39,9 +40,10 @@ jobs:
           uv run pytest tests/crawlers/test_parsers.py -k 'javdb_current_actor_markup or javdb_legacy_actor_markup'
           uv run pytest tests/test_jellyfin_auth.py
           uv run pytest tests/test_ltx.py
+          uv run pytest tests/crawlers/test_javdb_search.py
 
       - name: Build Apple Silicon DMG
-        run: uv run scripts/build.py --create-dmg --version 220261104.2 --debug
+        run: uv run scripts/build.py --create-dmg --version 220261116.1 --debug
 
       - uses: actions/upload-artifact@v4
         with:
