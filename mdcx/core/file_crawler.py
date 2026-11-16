@@ -280,7 +280,9 @@ class FileScraper:
         web_data = await self._call_crawler(task_input, website)
         web_data_json = web_data.data
         if web_data_json is None:
-            return None
+            if error := web_data.debug_info.error:
+                raise ValueError(f"{website} 刮削失败: {error}") from error
+            raise ValueError(f"{website} 没有返回影片数据")
 
         res = update(CrawlersResult.empty(), web_data_json)
         if not res.title:
