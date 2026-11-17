@@ -1,4 +1,6 @@
+import asyncio
 import re
+import time
 from typing import override
 from urllib.parse import urljoin
 
@@ -152,6 +154,19 @@ class Parser(DetailPageParser):
 
 class JavdbCrawler(BaseCrawler):
     parser = Parser()
+
+    @override
+    async def _fetch(self, ctx, url: str, use_browser: bool | None):
+        # One shared crawler instance serves all files in the batch.
+        async with self.lock:
+            interval = max(1.0, float(manager.config.javdb_time))
+            remaining = getattr(self, "_next_request_at", 0) - time.monotonic()
+            if remaining > 0:
+                await asyncio.sleep(remaining)
+            try:
+                return await super()._fetch(ctx, url, use_browser)
+            finally:
+                self._next_request_at = time.monotonic() + interval
 
     @classmethod
     @override
