@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       UV_PYTHON: "3.13"
     steps:
