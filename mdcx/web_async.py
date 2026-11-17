@@ -1,6 +1,9 @@
 import asyncio
+import math
 import random
+import time
 from collections.abc import Callable
+from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -21,6 +24,7 @@ class AsyncWebLimiters:
             "127.0.0.1": AsyncLimiter(300, 1),
             "localhost": AsyncLimiter(300, 1),
         }
+        self.cooldown_until: dict[str, float] = {}
 
     def get(self, key: str, rate: float = 5, period: float = 1) -> AsyncLimiter:
         """默认对所有域名启用 5 req/s 的速率限制"""
@@ -108,10 +112,17 @@ class AsyncWebClient:
         try:
             u = httpx.URL(url)
             headers = self._prepare_headers(url, headers)
-            await self.limiters.get(u.host).acquire()
             retry_count = self.retry
             error_msg = ""
             for attempt in range(retry_count):
+                remaining = self.limiters.cooldown_until.get(u.host, 0) - time.monotonic()
+                if remaining > 0:
+                    return None, f"{u.host} HTTP 429 限流冷却中，请至少 {int(remaining) + 1} 秒后再试"
+                await self.limiters.get(u.host).acquire()
+                # Another request can receive 429 while this request waits for its permit.
+                remaining = self.limiters.cooldown_until.get(u.host, 0) - time.monotonic()
+                if remaining > 0:
+                    return None, f"{u.host} HTTP 429 限流冷却中，请至少 {int(remaining) + 1} 秒后再试"
                 # 采用保守的重试策略, 除特定状态码外不进行重试
                 retry = False
                 try:
@@ -128,11 +139,22 @@ class AsyncWebClient:
                         allow_redirects=allow_redirects,
                     )
                     # 检查响应状态
+                    if resp.status_code == 429:
+                        try:
+                            retry_after = resp.headers.get("Retry-After", "60")
+                            try:
+                                delay = float(retry_after)
+                            except ValueError:
+                                delay = parsedate_to_datetime(retry_after).timestamp() - time.time()
+                            delay = max(60.0, delay) if math.isfinite(delay) else 60.0
+                        except (TypeError, ValueError, OverflowError):
+                            delay = 60.0
+                        self.limiters.cooldown_until[u.host] = time.monotonic() + delay
+                        return None, f"{method} {url} 失败: HTTP 429，请至少 {int(delay)} 秒后再试"
                     if resp.status_code >= 300 and not (resp.status_code == 302 and resp.headers.get("Location")):
                         error_msg = f"HTTP {resp.status_code}"
                         retry = resp.status_code in (
                             408,  # Request Timeout
-                            429,  # Too Many Requests
                             504,  # Gateway Timeout
                         )
                     else:
