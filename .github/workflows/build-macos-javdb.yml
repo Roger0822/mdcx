@@ -1,4 +1,4 @@
-name: Build macOS app with JavDB search fix
+name: Build macOS app with JavDB rate limit fix
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
       - fix/ltx-watermark
       - codex/ltx-mosaic-priority
       - codex/javdb-search-diagnostics
+      - codex/javdb-rate-limit
 
 permissions:
   contents: read
@@ -41,9 +42,10 @@ jobs:
           uv run pytest tests/test_jellyfin_auth.py
           uv run pytest tests/test_ltx.py
           uv run pytest tests/crawlers/test_javdb_search.py
+          uv run pytest tests/test_request_throttle.py
 
       - name: Build Apple Silicon DMG
-        run: uv run scripts/build.py --create-dmg --version 220261116.1 --debug
+        run: uv run scripts/build.py --create-dmg --version 220261117.1 --debug
 
       - uses: actions/upload-artifact@v4
         with:
