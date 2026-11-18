@@ -130,8 +130,10 @@ class FileScraper:
 
         c = await self.crawler_provider.get(website)
 
-        # 对爬虫函数调用添加超时限制, 超时异常由调用者处理
-        if os.getenv("DEBUG"):
+        # JavDB serializes requests and waits between them. Queue time must not
+        # consume a batch-wide 30-second deadline; HTTP/browser requests retain
+        # their own transport timeouts.
+        if website == Website.JAVDB or os.getenv("DEBUG"):
             timeout = None
         r = await asyncio.wait_for(c.run(task_input), timeout=timeout)
         return r
