@@ -43,9 +43,10 @@ jobs:
           uv run pytest tests/test_ltx.py
           uv run pytest tests/crawlers/test_javdb_search.py
           uv run pytest tests/test_request_throttle.py
+          uv run pytest tests/test_javdb_queue.py
 
       - name: Build Apple Silicon DMG
-        run: uv run scripts/build.py --create-dmg --version 220261117.1 --debug
+        run: uv run scripts/build.py --create-dmg --version 220261118.1 --debug
 
       - uses: actions/upload-artifact@v4
         with:
