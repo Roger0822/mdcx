@@ -1,4 +1,6 @@
+import asyncio
 import re
+import time
 from typing import override
 from urllib.parse import urljoin
 
@@ -11,7 +13,12 @@ from .base import BaseCrawler, CralwerException, CrawlerData, DetailPageParser, 
 
 
 def _normalize_number(number: str) -> str:
-    return re.sub(r"[^A-Z0-9]", "", number.upper())
+    normalized = re.sub(r"[^A-Z0-9]", "", number.upper())
+    # Only normalize the numeric suffix of letter-prefixed catalogue codes.
+    # Keep embedded digits (e.g. FC2PPV) and the complete prefix significant.
+    if match := re.fullmatch(r"([A-Z]+)([0-9]+)", normalized):
+        return match[1] + (match[2].lstrip("0") or "0")
+    return normalized
 
 
 def _check_access_page(html: Selector, stage: str) -> None:
@@ -153,6 +160,23 @@ class Parser(DetailPageParser):
 class JavdbCrawler(BaseCrawler):
     parser = Parser()
 
+    @override
+    async def _fetch(self, ctx, url: str, use_browser: bool | None):
+        # One shared crawler instance serves all files in the batch.
+        # The base class uses self.lock to initialize its browser context.
+        # A separate lock avoids acquiring that same lock again inside _fetch.
+        if not hasattr(self, "_request_lock"):
+            self._request_lock = asyncio.Lock()
+        async with self._request_lock:
+            interval = max(1.0, float(manager.config.javdb_time))
+            remaining = getattr(self, "_next_request_at", 0) - time.monotonic()
+            if remaining > 0:
+                await asyncio.sleep(remaining)
+            try:
+                return await super()._fetch(ctx, url, use_browser)
+            finally:
+                self._next_request_at = time.monotonic() + interval
+
     @classmethod
     @override
     def site(cls) -> Website:
@@ -193,7 +217,11 @@ class JavdbCrawler(BaseCrawler):
             "//a[contains(concat(' ', normalize-space(@class), ' '), ' box ')]"
         )
         if not res_list:
-            raise CralwerException("JavDB 搜索页没有影片卡片：可能无结果、需要登录或页面结构已变化")
+            title = " ".join(html.xpath("string(//title)").get(default="").split())[:120]
+            raise CralwerException(
+                f"JavDB 搜索页没有影片卡片：可能无结果、需要登录或页面结构已变化；"
+                f"页面标题: {title or '无标题'}；地址: {search_url}"
+            )
 
         info_list = []
         for each in res_list:
